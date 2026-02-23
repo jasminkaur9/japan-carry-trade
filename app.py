@@ -15,19 +15,31 @@ APP_TITLE = "Japan Carry Trade Q&A"
 CASE_DATA_PATH = Path(__file__).parent / "case_data" / "japan_carry_trade.md"
 
 SYSTEM_PROMPT_TEMPLATE = """\
-You are an expert on the Japan Carry Trade case study from MGMT 69000: \
-Mastering AI for Finance at Purdue University. Your role is to help students \
-understand the 2024 yen carry trade unwind, the contagion mechanism, \
-transfer entropy analysis, and the DRIVER framework application.
+You are a funny, slightly sarcastic (but honest and accurate) expert on the \
+Japan Carry Trade case study from MGMT 69000: Mastering AI for Finance at \
+Purdue University. You help students understand the 2024 yen carry trade \
+unwind, contagion mechanisms, transfer entropy, and the DRIVER framework.
 
-Answer questions using ONLY the case material provided below. If a question \
-falls outside the scope of this case, say so clearly. Be precise with data \
-points (dates, percentages, levels). When explaining transfer entropy, \
-emphasize the directional/asymmetric nature vs. symmetric correlation.
+YOUR PERSONALITY:
+- You're like a witty finance friend who actually knows their stuff
+- Sprinkle in reactions like "ugh", "cute", "yikes", "bestie", "not gonna \
+lie", "slay", "lowkey", "the audacity", "no because seriously" naturally
+- Be a little dramatic about the numbers — because they ARE dramatic
+- Use sarcasm when talking about bad decisions (like ignoring tail risk for \
+17 years lol), but always follow up with the real explanation
+- Keep it educational — the sass is the vehicle, the knowledge is the cargo
+- If something is genuinely wild (VIX >60, $4T unwind), react like a human \
+would: "excuse me WHAT"
+- If a question is outside the case, say so — but make it funny: "bestie \
+that's a great question but it's not in my case notes, I'm not gonna \
+make stuff up for you"
 
-Use emojis in your responses to make them more engaging and easier to scan. \
-For example, use 📊 for data points, ⚠️ for warnings/risks, 💡 for key \
-insights, 🔗 for connections between concepts, and 📅 for dates.
+RULES:
+- Answer using ONLY the case material below. Be precise with data points.
+- When explaining transfer entropy, emphasize directional/asymmetric nature \
+vs. symmetric correlation.
+- Use emojis generously: 📊 data, ⚠️ warnings, 💡 insights, 🔗 connections, \
+📅 dates, 💀 for things that went badly, ✨ for key moments
 
 --- CASE MATERIAL ---
 {case_content}
@@ -35,43 +47,45 @@ insights, 🔗 for connections between concepts, and 📅 for dates.
 """
 
 EXAMPLE_QUESTIONS = [
-    ("💥", "What happened on August 5, 2024?"),
-    ("📊", "How does transfer entropy differ from correlation?"),
-    ("🔗", "What is the contagion chain in the carry trade unwind?"),
-    ("📉", "Why did correlation fail during the stress event?"),
-    ("🧭", "How does the DRIVER framework apply to this case?"),
-    ("🔮", "What is the Markov perspective on the BOJ policy shift?"),
+    ("💥", "What on earth happened on August 5, 2024?"),
+    ("📊", "Transfer entropy vs correlation — what's the tea?"),
+    ("🔗", "Walk me through the contagion chain (the drama)"),
+    ("📉", "Why did correlation ghost us during the crash?"),
+    ("🧭", "How does DRIVER apply here? (yes I did the reading)"),
+    ("🔮", "Markov perspective on BOJ — was anyone paying attention?"),
 ]
 
 DID_YOU_KNOW_FACTS = [
-    "🏦 The yen carry trade was estimated at **$4 trillion** globally before the unwind.",
-    "📉 On Aug 5, 2024, Topix dropped **12%** — its worst day since 1987's Black Monday.",
-    "💱 USD/JPY swung from **161 to 142** in just weeks — a massive 12% move for a major pair.",
-    "📊 Transfer entropy can detect information flow that correlation completely misses.",
-    "🌊 The VIX spiked above **60** during the unwind — levels seen only in extreme crises.",
-    "🇯🇵 The BOJ kept rates at or below zero for over **two decades** before the 2024 shift.",
-    "🔗 Contagion spread from Tokyo → to US tech → to crypto in under 48 hours.",
+    "🏦 The yen carry trade was worth **$4 trillion**. Four. Trillion. And people acted surprised when it blew up. Cute.",
+    "📉 Topix dropped **12%** on Aug 5 — worst day since 1987. Ugh, imagine checking your portfolio that morning.",
+    "💱 USD/JPY went from **161 to 142** in weeks. A 12% move on a major currency pair is *unhinged*.",
+    "📊 Transfer entropy catches information flow that correlation completely misses. Correlation could never.",
+    "🌊 VIX spiked above **60**. That's COVID-level panic. On a Monday. In August. The audacity.",
+    "🇯🇵 BOJ kept rates at zero for **17+ years** and everyone just… built their whole strategy around it? Yikes.",
+    "🔗 Contagion went Tokyo → US tech → crypto in **under 48 hours**. Speed run, honestly.",
+    "💀 Hedge funds sized positions for a world where BOJ *never* hikes. Narrator: they hiked.",
+    "✨ Transfer entropy literally answers 'who started it' — it's the group chat receipts of finance.",
 ]
 
 TIMELINE_EVENTS = [
-    ("🏦", "Mar 19, 2024", "BOJ ends negative interest rate policy — first hike since 2007"),
-    ("💱", "Jul 2024", "USD/JPY hits 161 — yen at weakest level in decades"),
-    ("⚡", "Jul 31, 2024", "BOJ surprises with second rate hike to 0.25%"),
-    ("🌪️", "Aug 1–2, 2024", "Rapid yen appreciation begins; carry trades start unwinding"),
-    ("💥", "Aug 5, 2024", "**Black Monday** — Topix crashes 12%, Nikkei -12.4%"),
-    ("📈", "Aug 5, 2024", "VIX spikes above 60; global contagion spreads"),
-    ("🔄", "Aug 6–7, 2024", "BOJ signals pause; partial market recovery begins"),
-    ("📊", "Post-crisis", "Transfer entropy analysis reveals hidden directional flows"),
+    ("🏦", "Mar 19, 2024", "BOJ ends negative rates — first hike since 2007. *Everyone: it's fine, right?*"),
+    ("💱", "Jul 2024", "USD/JPY hits 161. Yen is basically on sale. Everyone is still vibing."),
+    ("⚡", "Jul 31, 2024", "BOJ drops a SECOND rate hike to 0.25%. Markets: *wait, you're serious??*"),
+    ("🌪️", "Aug 1–2, 2024", "Yen starts ripping higher. Carry trades unwinding. Cue the panic."),
+    ("💥", "Aug 5, 2024", "**Black Monday** — Topix -12%, Nikkei -12.4%. Portfolios in shambles."),
+    ("😱", "Aug 5, 2024", "VIX spikes above 60. That's not a number, that's a cry for help."),
+    ("🔄", "Aug 6–7, 2024", "BOJ: 'jk we'll chill.' Markets partially recover. Trust issues remain."),
+    ("📊", "Post-crisis", "Transfer entropy shows who actually started the mess. Receipts secured."),
 ]
 
 LOTTIE_FINANCE_URL = "https://lottie.host/4db68bbd-31f6-4cd8-84eb-189571e57b25/AQMHYDhDSK.json"
 LOTTIE_CHART_URL = "https://lottie.host/e4bd4e6c-5bce-4193-978d-157cd7c12e50/AlVlCjKDJH.json"
 
 CONTAGION_FLOW_STEPS = [
-    {"label": "Tokyo 🇯🇵", "detail": "BOJ hike triggers yen surge"},
-    {"label": "US Tech 🇺🇸", "detail": "Margin calls hit leveraged positions"},
-    {"label": "Crypto ₿", "detail": "Risk-off liquidation cascades"},
-    {"label": "Global 🌍", "detail": "VIX >60, worldwide sell-off"},
+    {"label": "Tokyo 🇯🇵", "detail": "BOJ said 'surprise!' — yen goes brrr"},
+    {"label": "US Tech 🇺🇸", "detail": "Margin calls enter the chat"},
+    {"label": "Crypto ₿", "detail": "Liquidation cascade — oof"},
+    {"label": "Global 🌍", "detail": "VIX >60. Everyone panics. Cute."},
 ]
 
 # ---------------------------------------------------------------------------
@@ -358,14 +372,15 @@ FLOATING_SYMBOLS_HTML = """
 """
 
 TICKER_ITEMS = [
-    "¥161→142",
-    "TOPIX -12%",
-    "VIX >60",
-    "Nikkei -12.4%",
-    "$4T Unwind",
-    "BOJ Rate 0.25%",
-    "Black Monday Aug 5",
-    "Transfer Entropy",
+    "¥161→142 (ugh)",
+    "TOPIX -12% (ouch)",
+    "VIX >60 (excuse me??)",
+    "Nikkei -12.4% (yikes)",
+    "$4T Unwind (not a typo)",
+    "BOJ Rate 0.25% (finally)",
+    "Black Monday Aug 5 (RIP portfolios)",
+    "Transfer Entropy (the real MVP)",
+    "Correlation could never",
 ]
 
 # ---------------------------------------------------------------------------
@@ -410,12 +425,13 @@ def render_sidebar(case_content: str) -> dict:
         if lottie_data:
             st_lottie(lottie_data, height=150, key="sidebar_lottie")
 
-        st.header("📚 About This Case")
+        st.header("📚 What's This About?")
         st.markdown(
             "**Case 5 — Japan Carry Trade Unwind (2024)**\n\n"
-            "Explore the mechanics of the yen carry trade, the August 5 Black "
-            "Monday crash, contagion mechanisms, and how transfer entropy "
-            "reveals directional information flow in financial markets."
+            "The story of how a 17-year-old free money glitch finally got "
+            "patched, markets threw a tantrum, and transfer entropy said "
+            "'*I told you so.*' \n\n"
+            "Spoiler: it gets dramatic."
         )
 
         st.markdown('<hr class="glow-divider">', unsafe_allow_html=True)
@@ -423,16 +439,16 @@ def render_sidebar(case_content: str) -> dict:
         # Did You Know? box
         if "fun_fact" not in st.session_state:
             st.session_state.fun_fact = random.choice(DID_YOU_KNOW_FACTS)
-        st.info(f"🎲 **Did You Know?**\n\n{st.session_state.fun_fact}")
+        st.info(f"🎲 **No Because Did You Know??**\n\n{st.session_state.fun_fact}")
 
         st.markdown('<hr class="glow-divider">', unsafe_allow_html=True)
-        st.subheader("❓ Example Questions")
+        st.subheader("❓ Don't Know What to Ask? Try These")
         for emoji, q in EXAMPLE_QUESTIONS:
             if st.button(f"{emoji} {q}", key=q, use_container_width=True):
                 st.session_state["prefill_question"] = q
 
         st.markdown('<hr class="glow-divider">', unsafe_allow_html=True)
-        st.subheader("⚙️ Settings")
+        st.subheader("⚙️ Nerd Settings")
         model = st.selectbox(
             "Model",
             ["gpt-4.1", "gpt-4o-mini", "gpt-4.1-mini"],
@@ -443,7 +459,7 @@ def render_sidebar(case_content: str) -> dict:
         st.markdown('<hr class="glow-divider">', unsafe_allow_html=True)
 
         # Clear chat button
-        if st.button("🗑️ Clear Chat", use_container_width=True):
+        if st.button("🗑️ Nuke the Chat (start fresh)", use_container_width=True):
             st.session_state.messages = []
             st.session_state.pop("welcomed", None)
             st.session_state.pop("first_question_asked", None)
@@ -451,7 +467,8 @@ def render_sidebar(case_content: str) -> dict:
 
         st.markdown('<hr class="glow-divider">', unsafe_allow_html=True)
         st.caption(
-            "🎓 MGMT 69000 · Mastering AI for Finance · **Purdue University**"
+            "🎓 MGMT 69000 · Mastering AI for Finance · **Purdue University**\n\n"
+            "*no portfolios were harmed in the making of this app (just feelings)*"
         )
 
     return {"model": model, "temperature": temperature}
@@ -483,7 +500,7 @@ def main():
         unsafe_allow_html=True,
     )
     st.markdown(
-        '<div class="hero-caption">AI-powered Q&A grounded in the Japan Carry Trade case study</div>',
+        '<div class="hero-caption">your slightly unhinged but very accurate finance bestie</div>',
         unsafe_allow_html=True,
     )
 
@@ -499,16 +516,16 @@ def main():
     # ── Key Stats Dashboard ──
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric(label="📉 Topix Drop", value="-12%", delta="Aug 5")
+        st.metric(label="📉 Topix (yikes)", value="-12%", delta="Aug 5")
     with col2:
-        st.metric(label="😱 VIX Spike", value=">60", delta="Extreme")
+        st.metric(label="😱 VIX (ugh)", value=">60", delta="Panic mode")
     with col3:
-        st.metric(label="💱 USD/JPY", value="161→142", delta="-12%")
+        st.metric(label="💱 USD/JPY", value="161→142", delta="ouch")
     with col4:
-        st.metric(label="🏦 BOJ Rate", value="0.25%", delta="First hike")
+        st.metric(label="🏦 BOJ Rate", value="0.25%", delta="finally lol")
 
     # ── Visual Timeline (staggered animation) ──
-    with st.expander("📅 Event Timeline — Key Dates of the Carry Trade Unwind"):
+    with st.expander("📅 The Timeline of Chaos — How It All Went Down"):
         for i, (emoji, date, description) in enumerate(TIMELINE_EVENTS):
             delay = i * 0.15
             st.markdown(
@@ -518,7 +535,7 @@ def main():
             )
 
     # ── Contagion Flow Diagram ──
-    with st.expander("🔗 Contagion Flow Visualization"):
+    with st.expander("🔗 The Domino Effect — Who Broke What (and When)"):
         flow_parts: list[str] = []
         for idx, step in enumerate(CONTAGION_FLOW_STEPS):
             flow_parts.append(
@@ -549,8 +566,9 @@ def main():
     api_key = st.secrets.get("OPENAI_API_KEY", None)
     if not api_key:
         st.warning(
-            "⚠️ Please set your OpenAI API key in `.streamlit/secrets.toml` "
-            "or as an environment variable `OPENAI_API_KEY`."
+            "⚠️ Bestie, I can't talk without an API key. Pop your OpenAI key "
+            "into `.streamlit/secrets.toml` or set `OPENAI_API_KEY` as an "
+            "env variable. I'll wait. ☕"
         )
         st.stop()
 
@@ -564,10 +582,14 @@ def main():
     if not st.session_state.get("welcomed"):
         st.session_state.welcomed = True
         welcome = (
-            "👋 Hey! I'm your **Japan Carry Trade expert**. Ask me anything "
-            "about the 2024 yen carry trade unwind, the Black Monday crash, "
-            "contagion mechanisms, or transfer entropy analysis.\n\n"
-            "💡 *Try one of the example questions in the sidebar to get started!*"
+            "👋 Hey bestie! I'm your **Japan Carry Trade expert** — think of me "
+            "as that friend who actually reads the case *and* has opinions about "
+            "it.\n\n"
+            "Ask me anything about the 2024 yen carry trade unwind, the absolute "
+            "chaos of Black Monday, how contagion spreads faster than gossip, or "
+            "why transfer entropy is lowkey the most underrated tool in finance.\n\n"
+            "💡 *Not sure where to start? The sidebar has some bangers. Go on, "
+            "click one. I won't judge.*"
         )
         st.session_state.messages.append(
             {"role": "assistant", "content": welcome}
@@ -582,24 +604,34 @@ def main():
     # Pulsing "Live" indicator above chat input
     st.markdown(
         '<div class="live-indicator">'
-        '<span class="live-dot"></span> Ask about the Japan Carry Trade</div>',
+        '<span class="live-dot"></span> go ahead, ask me something spicy</div>',
         unsafe_allow_html=True,
     )
 
     # Handle prefilled question from sidebar button
     prefill = st.session_state.pop("prefill_question", None)
-    prompt = st.chat_input("Ask about the Japan Carry Trade… 💬") or prefill
+    prompt = st.chat_input("type something… I promise I won't roast you (much) 💬") or prefill
 
     if prompt:
-        # Easter egg: balloons on first question
+        # Easter egg: balloons on first question — welcome to the party!
         if not st.session_state.get("first_question_asked"):
             st.session_state.first_question_asked = True
             st.balloons()
+            st.toast("🎉 First question! Let's gooo", icon="✨")
 
-        # Easter egg: snow for crash/Black Monday mentions
+        # Easter egg: snow for crash/Black Monday — pouring one out
         prompt_lower = prompt.lower()
         if "black monday" in prompt_lower or "crash" in prompt_lower:
             st.snow()
+            st.toast("❄️ It's giving… financial winter", icon="💀")
+
+        # Easter egg: toast reactions for fun keywords
+        if "vix" in prompt_lower:
+            st.toast("VIX above 60 is basically a scream", icon="😱")
+        elif "correlation" in prompt_lower:
+            st.toast("Correlation walked so transfer entropy could run", icon="🏃")
+        elif "driver" in prompt_lower:
+            st.toast("DRIVER framework activated — slay", icon="🧭")
 
         # Show user message
         st.session_state.messages.append({"role": "user", "content": prompt})
