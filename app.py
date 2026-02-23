@@ -1,6 +1,7 @@
 """Japan Carry Trade Q&A — Creative & Visual Edition."""
 
 import random
+import time
 
 import streamlit as st
 import openai
@@ -650,35 +651,70 @@ def main():
             for m in st.session_state.messages
         ]
 
-        # Stream assistant response
+        # Stream assistant response — with retry + fallback
+        FALLBACK_MODELS = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash"]
         with st.chat_message("assistant", avatar="🏦"):
-            try:
-                stream = client.chat.completions.create(
-                    model=settings["model"],
-                    messages=api_messages,
-                    temperature=settings["temperature"],
-                    stream=True,
-                )
-                response = st.write_stream(stream)
-            except openai.AuthenticationError:
-                response = (
-                    "🔑 Yikes — Google rejected the API key. Check **Manage "
-                    "app → Settings → Secrets** and make sure `GOOGLE_API_KEY` "
-                    "is valid. Grab a free one at https://aistudio.google.com/apikey"
-                )
-                st.error(response)
-            except openai.NotFoundError:
-                response = (
-                    f"🤔 The model **{settings['model']}** isn't available. "
-                    "Try switching to **gemini-2.0-flash-lite** in the sidebar."
-                )
-                st.error(response)
-            except openai.APIError as exc:
-                response = (
-                    f"💀 Gemini is being dramatic right now: {exc}\n\n"
-                    "Try again in a sec?"
-                )
-                st.error(response)
+            response = None
+            chosen_model = settings["model"]
+
+            for attempt in range(3):
+                try:
+                    stream = client.chat.completions.create(
+                        model=chosen_model,
+                        messages=api_messages,
+                        temperature=settings["temperature"],
+                        stream=True,
+                    )
+                    response = st.write_stream(stream)
+                    break
+                except openai.AuthenticationError:
+                    response = (
+                        "🔑 Yikes — Google rejected the API key. Check "
+                        "**Manage app → Settings → Secrets** and make sure "
+                        "`GOOGLE_API_KEY` is valid.\n\n"
+                        "Grab a free one at https://aistudio.google.com/apikey"
+                    )
+                    st.error(response)
+                    break
+                except openai.RateLimitError:
+                    # Try a different model on next attempt
+                    fallbacks = [m for m in FALLBACK_MODELS if m != chosen_model]
+                    if attempt < 2 and fallbacks:
+                        chosen_model = fallbacks[attempt % len(fallbacks)]
+                        st.info(
+                            f"⏳ Rate limited — retrying with **{chosen_model}** "
+                            f"in a few seconds… (attempt {attempt + 2}/3)"
+                        )
+                        time.sleep(3)
+                        continue
+                    response = (
+                        "😤 All models are rate-limited right now. Gemini's "
+                        "free tier has per-minute limits.\n\n"
+                        "**Wait 60 seconds and try again** — it'll work! "
+                        "Or switch models in the sidebar."
+                    )
+                    st.warning(response)
+                    break
+                except openai.NotFoundError:
+                    response = (
+                        f"🤔 Model **{chosen_model}** isn't available. "
+                        "Try **gemini-2.0-flash-lite** in the sidebar."
+                    )
+                    st.error(response)
+                    break
+                except openai.APIError as exc:
+                    if attempt < 2:
+                        time.sleep(2)
+                        continue
+                    response = (
+                        f"💀 Gemini is being dramatic: {exc}\n\n"
+                        "Try again in a sec?"
+                    )
+                    st.error(response)
+                    break
+
+            if response is None:
+                response = "Something went wrong — try again!"
 
         st.session_state.messages.append(
             {"role": "assistant", "content": response}
