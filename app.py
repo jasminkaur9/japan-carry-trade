@@ -4,8 +4,8 @@ import random
 import time
 
 import streamlit as st
-import openai
-from openai import OpenAI
+from google import genai
+from google.genai import types
 from pathlib import Path
 from streamlit_lottie import st_lottie
 
@@ -565,7 +565,7 @@ def main():
     system_prompt = build_system_prompt(case_content)
     settings = render_sidebar(case_content)
 
-    # Initialize Gemini client (via OpenAI-compatible endpoint)
+    # Initialize Gemini client (native SDK)
     api_key = st.secrets.get("GOOGLE_API_KEY", None)
     if not api_key:
         st.warning(
@@ -576,10 +576,7 @@ def main():
         )
         st.stop()
 
-    client = OpenAI(
-        api_key=api_key,
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-    )
+    client = genai.Client(api_key=api_key)
 
     # Session state for chat history
     if "messages" not in st.session_state:
@@ -645,66 +642,81 @@ def main():
         with st.chat_message("user", avatar="🧑‍🎓"):
             st.markdown(prompt)
 
-        # Build messages for API call
-        api_messages = [{"role": "system", "content": system_prompt}] + [
-            {"role": m["role"], "content": m["content"]}
-            for m in st.session_state.messages
-        ]
+        # Build chat history for Gemini native SDK
+        gemini_history = []
+        for m in st.session_state.messages[:-1]:  # exclude latest user msg
+            role = "user" if m["role"] == "user" else "model"
+            gemini_history.append(
+                types.Content(
+                    role=role,
+                    parts=[types.Part.from_text(text=m["content"])],
+                )
+            )
 
         # Stream assistant response — with retry + fallback
-        FALLBACK_MODELS = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash"]
+        FALLBACK_MODELS = ["gemini-2.0-flash", "gemini-2.0-flash-lite"]
         with st.chat_message("assistant", avatar="🏦"):
             response = None
             chosen_model = settings["model"]
 
             for attempt in range(3):
                 try:
-                    stream = client.chat.completions.create(
+                    chat = client.chats.create(
                         model=chosen_model,
-                        messages=api_messages,
-                        temperature=settings["temperature"],
-                        stream=True,
+                        history=gemini_history,
+                        config=types.GenerateContentConfig(
+                            system_instruction=system_prompt,
+                            temperature=settings["temperature"],
+                        ),
                     )
-                    response = st.write_stream(stream)
+                    stream = chat.send_message_stream(prompt)
+
+                    # Stream chunks into Streamlit
+                    placeholder = st.empty()
+                    full_response = ""
+                    for chunk in stream:
+                        if chunk.text:
+                            full_response += chunk.text
+                            placeholder.markdown(full_response + "▌")
+                    placeholder.markdown(full_response)
+                    response = full_response
                     break
-                except openai.AuthenticationError:
-                    response = (
-                        "🔑 Yikes — Google rejected the API key. Check "
-                        "**Manage app → Settings → Secrets** and make sure "
-                        "`GOOGLE_API_KEY` is valid.\n\n"
-                        "Grab a free one at https://aistudio.google.com/apikey"
-                    )
-                    st.error(response)
-                    break
-                except openai.RateLimitError:
-                    # Try a different model on next attempt
-                    fallbacks = [m for m in FALLBACK_MODELS if m != chosen_model]
-                    if attempt < 2 and fallbacks:
-                        chosen_model = fallbacks[attempt % len(fallbacks)]
-                        st.info(
-                            f"⏳ Rate limited — retrying with **{chosen_model}** "
-                            f"in a few seconds… (attempt {attempt + 2}/3)"
+                except Exception as exc:
+                    err = str(exc).lower()
+                    if "api_key" in err or "authenticate" in err:
+                        response = (
+                            "🔑 Yikes — Google rejected the API key. Check "
+                            "**Manage app → Settings → Secrets** and make "
+                            "sure `GOOGLE_API_KEY` is valid.\n\n"
+                            "Grab a free one at "
+                            "https://aistudio.google.com/apikey"
                         )
-                        time.sleep(3)
-                        continue
-                    response = (
-                        "😤 All models are rate-limited right now. Gemini's "
-                        "free tier has per-minute limits.\n\n"
-                        "**Wait 60 seconds and try again** — it'll work! "
-                        "Or switch models in the sidebar."
-                    )
-                    st.warning(response)
-                    break
-                except openai.NotFoundError:
-                    response = (
-                        f"🤔 Model **{chosen_model}** isn't available. "
-                        "Try **gemini-2.0-flash-lite** in the sidebar."
-                    )
-                    st.error(response)
-                    break
-                except openai.APIError as exc:
+                        st.error(response)
+                        break
+                    if "429" in str(exc) or "quota" in err or "rate" in err:
+                        fallbacks = [
+                            m for m in FALLBACK_MODELS if m != chosen_model
+                        ]
+                        if attempt < 2 and fallbacks:
+                            chosen_model = fallbacks[attempt % len(fallbacks)]
+                            st.info(
+                                f"⏳ Rate limited — retrying with "
+                                f"**{chosen_model}** in a few seconds… "
+                                f"(attempt {attempt + 2}/3)"
+                            )
+                            time.sleep(5)
+                            continue
+                        response = (
+                            "😤 All models are rate-limited right now. "
+                            "Gemini's free tier has per-minute limits.\n\n"
+                            "**Wait 60 seconds and try again** — it'll "
+                            "work! Or switch models in the sidebar."
+                        )
+                        st.warning(response)
+                        break
+                    # Generic error
                     if attempt < 2:
-                        time.sleep(2)
+                        time.sleep(3)
                         continue
                     response = (
                         f"💀 Gemini is being dramatic: {exc}\n\n"
