@@ -1,6 +1,13 @@
 """Tests for the Japan Carry Trade Q&A app."""
 
-from app import CASE_DATA_PATH, SYSTEM_PROMPT_TEMPLATE, build_system_prompt, load_case_content
+from app import (
+    CASE_DATA_PATH,
+    EXAMPLE_QUESTIONS,
+    SYSTEM_PROMPT_TEMPLATE,
+    TIMELINE_EVENTS,
+    build_system_prompt,
+    load_case_content,
+)
 
 
 def test_case_data_file_exists():
@@ -46,3 +53,21 @@ def test_build_system_prompt():
 def test_system_prompt_template_has_placeholder():
     """Template must contain the {case_content} placeholder."""
     assert "{case_content}" in SYSTEM_PROMPT_TEMPLATE
+
+
+def test_system_prompt_instructs_emoji_usage():
+    """System prompt should tell the AI to use emojis."""
+    assert "emoji" in SYSTEM_PROMPT_TEMPLATE.lower()
+
+
+def test_example_questions_have_emojis():
+    """Each example question should be a (emoji, question) tuple."""
+    for item in EXAMPLE_QUESTIONS:
+        assert isinstance(item, tuple) and len(item) == 2
+
+
+def test_timeline_events_non_empty():
+    """Timeline events should exist and have correct structure."""
+    assert len(TIMELINE_EVENTS) > 0
+    for item in TIMELINE_EVENTS:
+        assert isinstance(item, tuple) and len(item) == 3
