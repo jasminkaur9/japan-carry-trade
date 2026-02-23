@@ -452,7 +452,7 @@ def render_sidebar(case_content: str) -> dict:
         st.subheader("⚙️ Nerd Settings")
         model = st.selectbox(
             "Model",
-            ["gpt-4.1", "gpt-4o-mini", "gpt-4.1-mini"],
+            ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash"],
             index=0,
         )
         temperature = st.slider("Temperature", 0.0, 1.0, 0.3, 0.1)
@@ -563,30 +563,21 @@ def main():
     system_prompt = build_system_prompt(case_content)
     settings = render_sidebar(case_content)
 
-    # Initialize OpenAI client
-    api_key = st.secrets.get("OPENAI_API_KEY", None)
+    # Initialize Gemini client (via OpenAI-compatible endpoint)
+    api_key = st.secrets.get("GOOGLE_API_KEY", None)
     if not api_key:
         st.warning(
-            "⚠️ Bestie, I can't talk without an API key. Pop your OpenAI key "
-            "into `.streamlit/secrets.toml` or set `OPENAI_API_KEY` as an "
-            "env variable. I'll wait. ☕"
+            "⚠️ Bestie, I can't talk without an API key. Pop your Google AI "
+            "key into **Manage app → Settings → Secrets** like this:\n\n"
+            '`GOOGLE_API_KEY = "your-key-here"`\n\n'
+            "Get a free one at https://aistudio.google.com/apikey ☕"
         )
         st.stop()
 
-    client = OpenAI(api_key=api_key)
-
-    # Quick key validation — catch bad keys before the user chats
-    if not st.session_state.get("key_validated"):
-        try:
-            client.models.list()
-            st.session_state.key_validated = True
-        except Exception as exc:
-            st.error(
-                f"🔑 Ugh, your API key isn't working. OpenAI said: **{exc}**\n\n"
-                "Double-check your key in **Manage app → Settings → Secrets**. "
-                "Make sure it looks like `OPENAI_API_KEY = \"sk-...\"` (with quotes!)."
-            )
-            st.stop()
+    client = OpenAI(
+        api_key=api_key,
+        base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+    )
 
     # Session state for chat history
     if "messages" not in st.session_state:
@@ -670,22 +661,20 @@ def main():
                 response = st.write_stream(stream)
             except openai.AuthenticationError:
                 response = (
-                    "🔑 Yikes — OpenAI rejected the API key. It might be "
-                    "expired, revoked, or copy-pasted wrong. Check **Manage "
-                    "app → Settings → Secrets** and make sure the key is "
-                    "valid. I believe in you!"
+                    "🔑 Yikes — Google rejected the API key. Check **Manage "
+                    "app → Settings → Secrets** and make sure `GOOGLE_API_KEY` "
+                    "is valid. Grab a free one at https://aistudio.google.com/apikey"
                 )
                 st.error(response)
             except openai.NotFoundError:
                 response = (
-                    f"🤔 The model **{settings['model']}** doesn't exist on "
-                    "your OpenAI account. Try switching to **gpt-4o-mini** in "
-                    "the sidebar — it works on basically every plan."
+                    f"🤔 The model **{settings['model']}** isn't available. "
+                    "Try switching to **gemini-2.0-flash-lite** in the sidebar."
                 )
                 st.error(response)
             except openai.APIError as exc:
                 response = (
-                    f"💀 OpenAI is being dramatic right now: {exc}\n\n"
+                    f"💀 Gemini is being dramatic right now: {exc}\n\n"
                     "Try again in a sec?"
                 )
                 st.error(response)
