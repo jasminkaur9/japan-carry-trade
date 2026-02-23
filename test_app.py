@@ -2,6 +2,7 @@
 
 from app import (
     CASE_DATA_PATH,
+    CONTAGION_FLOW_STEPS,
     EXAMPLE_QUESTIONS,
     SYSTEM_PROMPT_TEMPLATE,
     TIMELINE_EVENTS,
@@ -71,3 +72,11 @@ def test_timeline_events_non_empty():
     assert len(TIMELINE_EVENTS) > 0
     for item in TIMELINE_EVENTS:
         assert isinstance(item, tuple) and len(item) == 3
+
+
+def test_contagion_flow_steps():
+    """Contagion flow steps should exist with label and detail keys."""
+    assert len(CONTAGION_FLOW_STEPS) >= 3
+    for step in CONTAGION_FLOW_STEPS:
+        assert "label" in step, "Each step needs a 'label' key"
+        assert "detail" in step, "Each step needs a 'detail' key"
