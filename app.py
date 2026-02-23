@@ -79,8 +79,8 @@ TIMELINE_EVENTS = [
     ("📊", "Post-crisis", "Transfer entropy shows who actually started the mess. Receipts secured."),
 ]
 
-LOTTIE_FINANCE_URL = "https://lottie.host/4db68bbd-31f6-4cd8-84eb-189571e57b25/AQMHYDhDSK.json"
-LOTTIE_CHART_URL = "https://lottie.host/e4bd4e6c-5bce-4193-978d-157cd7c12e50/AlVlCjKDJH.json"
+LOTTIE_FINANCE_URL = "https://assets2.lottiefiles.com/packages/lf20_kyu7xb1v.json"
+LOTTIE_CHART_URL = "https://assets5.lottiefiles.com/packages/lf20_V9t630.json"
 
 CONTAGION_FLOW_STEPS = [
     {"label": "Tokyo 🇯🇵", "detail": "BOJ said 'surprise!' — yen goes brrr"},
@@ -400,12 +400,13 @@ def build_system_prompt(case_content: str) -> str:
     return SYSTEM_PROMPT_TEMPLATE.format(case_content=case_content)
 
 
+@st.cache_data(ttl=3600)
 def load_lottie_url(url: str) -> dict | None:
-    """Fetch a Lottie animation JSON from a URL."""
+    """Fetch a Lottie animation JSON from a URL (cached 1 hr)."""
     import requests
 
     try:
-        r = requests.get(url, timeout=5)
+        r = requests.get(url, timeout=3)
         if r.status_code == 200:
             return r.json()
     except Exception:
