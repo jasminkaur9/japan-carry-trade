@@ -3,6 +3,7 @@
 import random
 
 import streamlit as st
+import openai
 from openai import OpenAI
 from pathlib import Path
 from streamlit_lottie import st_lottie
@@ -574,6 +575,19 @@ def main():
 
     client = OpenAI(api_key=api_key)
 
+    # Quick key validation — catch bad keys before the user chats
+    if not st.session_state.get("key_validated"):
+        try:
+            client.models.list()
+            st.session_state.key_validated = True
+        except Exception as exc:
+            st.error(
+                f"🔑 Ugh, your API key isn't working. OpenAI said: **{exc}**\n\n"
+                "Double-check your key in **Manage app → Settings → Secrets**. "
+                "Make sure it looks like `OPENAI_API_KEY = \"sk-...\"` (with quotes!)."
+            )
+            st.stop()
+
     # Session state for chat history
     if "messages" not in st.session_state:
         st.session_state.messages = []
@@ -646,13 +660,35 @@ def main():
 
         # Stream assistant response
         with st.chat_message("assistant", avatar="🏦"):
-            stream = client.chat.completions.create(
-                model=settings["model"],
-                messages=api_messages,
-                temperature=settings["temperature"],
-                stream=True,
-            )
-            response = st.write_stream(stream)
+            try:
+                stream = client.chat.completions.create(
+                    model=settings["model"],
+                    messages=api_messages,
+                    temperature=settings["temperature"],
+                    stream=True,
+                )
+                response = st.write_stream(stream)
+            except openai.AuthenticationError:
+                response = (
+                    "🔑 Yikes — OpenAI rejected the API key. It might be "
+                    "expired, revoked, or copy-pasted wrong. Check **Manage "
+                    "app → Settings → Secrets** and make sure the key is "
+                    "valid. I believe in you!"
+                )
+                st.error(response)
+            except openai.NotFoundError:
+                response = (
+                    f"🤔 The model **{settings['model']}** doesn't exist on "
+                    "your OpenAI account. Try switching to **gpt-4o-mini** in "
+                    "the sidebar — it works on basically every plan."
+                )
+                st.error(response)
+            except openai.APIError as exc:
+                response = (
+                    f"💀 OpenAI is being dramatic right now: {exc}\n\n"
+                    "Try again in a sec?"
+                )
+                st.error(response)
 
         st.session_state.messages.append(
             {"role": "assistant", "content": response}
