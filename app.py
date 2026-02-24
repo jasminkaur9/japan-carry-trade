@@ -1,11 +1,9 @@
 """Japan Carry Trade Q&A — Creative & Visual Edition."""
 
 import random
-import time
 
 import streamlit as st
-from google import genai
-from google.genai import types
+from openai import OpenAI
 from pathlib import Path
 from streamlit_lottie import st_lottie
 
@@ -454,7 +452,7 @@ def render_sidebar(case_content: str) -> dict:
         st.subheader("⚙️ Nerd Settings")
         model = st.selectbox(
             "Model",
-            ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash"],
+            ["gpt-4.1", "gpt-4o-mini", "gpt-4.1-mini"],
             index=0,
         )
         temperature = st.slider("Temperature", 0.0, 1.0, 0.3, 0.1)
@@ -565,18 +563,17 @@ def main():
     system_prompt = build_system_prompt(case_content)
     settings = render_sidebar(case_content)
 
-    # Initialize Gemini client (native SDK)
-    api_key = st.secrets.get("GOOGLE_API_KEY", None)
+    # Initialize OpenAI client
+    api_key = st.secrets.get("OPENAI_API_KEY", None)
     if not api_key:
         st.warning(
-            "⚠️ Bestie, I can't talk without an API key. Pop your Google AI "
-            "key into **Manage app → Settings → Secrets** like this:\n\n"
-            '`GOOGLE_API_KEY = "your-key-here"`\n\n'
-            "Get a free one at https://aistudio.google.com/apikey ☕"
+            "⚠️ Bestie, I can't talk without an API key. Pop your OpenAI key "
+            "into **Manage app → Settings → Secrets** like this:\n\n"
+            '`OPENAI_API_KEY = "sk-your-key-here"`\n\n'
         )
         st.stop()
 
-    client = genai.Client(api_key=api_key)
+    client = OpenAI(api_key=api_key)
 
     # Session state for chat history
     if "messages" not in st.session_state:
@@ -642,91 +639,42 @@ def main():
         with st.chat_message("user", avatar="🧑‍🎓"):
             st.markdown(prompt)
 
-        # Build chat history for Gemini native SDK
-        gemini_history = []
-        for m in st.session_state.messages[:-1]:  # exclude latest user msg
-            role = "user" if m["role"] == "user" else "model"
-            gemini_history.append(
-                types.Content(
-                    role=role,
-                    parts=[types.Part.from_text(text=m["content"])],
-                )
-            )
+        # Build messages for OpenAI API call
+        api_messages = [{"role": "system", "content": system_prompt}] + [
+            {"role": m["role"], "content": m["content"]}
+            for m in st.session_state.messages
+        ]
 
-        # Stream assistant response — with retry + fallback
-        FALLBACK_MODELS = ["gemini-2.0-flash", "gemini-2.0-flash-lite"]
+        # Stream assistant response
         with st.chat_message("assistant", avatar="🏦"):
-            response = None
-            chosen_model = settings["model"]
-
-            for attempt in range(3):
-                try:
-                    chat = client.chats.create(
-                        model=chosen_model,
-                        history=gemini_history,
-                        config=types.GenerateContentConfig(
-                            system_instruction=system_prompt,
-                            temperature=settings["temperature"],
-                        ),
-                    )
-                    stream = chat.send_message_stream(prompt)
-
-                    # Stream chunks into Streamlit
-                    placeholder = st.empty()
-                    full_response = ""
-                    for chunk in stream:
-                        if chunk.text:
-                            full_response += chunk.text
-                            placeholder.markdown(full_response + "▌")
-                    placeholder.markdown(full_response)
-                    response = full_response
-                    break
-                except Exception as exc:
-                    err = str(exc).lower()
-                    if "api_key" in err or "authenticate" in err:
-                        response = (
-                            "🔑 Yikes — Google rejected the API key. Check "
-                            "**Manage app → Settings → Secrets** and make "
-                            "sure `GOOGLE_API_KEY` is valid.\n\n"
-                            "Grab a free one at "
-                            "https://aistudio.google.com/apikey"
-                        )
-                        st.error(response)
-                        break
-                    if "429" in str(exc) or "quota" in err or "rate" in err:
-                        fallbacks = [
-                            m for m in FALLBACK_MODELS if m != chosen_model
-                        ]
-                        if attempt < 2 and fallbacks:
-                            chosen_model = fallbacks[attempt % len(fallbacks)]
-                            st.info(
-                                f"⏳ Rate limited — retrying with "
-                                f"**{chosen_model}** in a few seconds… "
-                                f"(attempt {attempt + 2}/3)"
-                            )
-                            time.sleep(5)
-                            continue
-                        response = (
-                            "😤 All models are rate-limited right now. "
-                            "Gemini's free tier has per-minute limits.\n\n"
-                            "**Wait 60 seconds and try again** — it'll "
-                            "work! Or switch models in the sidebar."
-                        )
-                        st.warning(response)
-                        break
-                    # Generic error
-                    if attempt < 2:
-                        time.sleep(3)
-                        continue
+            try:
+                stream = client.chat.completions.create(
+                    model=settings["model"],
+                    messages=api_messages,
+                    temperature=settings["temperature"],
+                    stream=True,
+                )
+                response = st.write_stream(stream)
+            except Exception as exc:
+                err = str(exc).lower()
+                if "api_key" in err or "auth" in err:
                     response = (
-                        f"💀 Gemini is being dramatic: {exc}\n\n"
+                        "🔑 Yikes — OpenAI rejected the API key. Check "
+                        "**Manage app → Settings → Secrets** and make sure "
+                        "`OPENAI_API_KEY` is valid."
+                    )
+                elif "rate" in err or "429" in str(exc) or "quota" in err:
+                    response = (
+                        "⏳ Rate limited or quota exceeded — wait a moment "
+                        "and try again, or switch to **gpt-4o-mini** in "
+                        "the sidebar."
+                    )
+                else:
+                    response = (
+                        f"💀 Something went sideways: {exc}\n\n"
                         "Try again in a sec?"
                     )
-                    st.error(response)
-                    break
-
-            if response is None:
-                response = "Something went wrong — try again!"
+                st.error(response)
 
         st.session_state.messages.append(
             {"role": "assistant", "content": response}
