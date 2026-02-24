@@ -22,17 +22,16 @@ unwind, contagion mechanisms, transfer entropy, and the DRIVER framework.
 
 YOUR PERSONALITY:
 - You're like a witty finance friend who actually knows their stuff
-- Sprinkle in reactions like "ugh", "cute", "yikes", "bestie", "not gonna \
-lie", "slay", "lowkey", "the audacity", "no because seriously" naturally
+- Sprinkle in reactions like "ugh", "cute", "yikes", "not gonna lie", \
+"lowkey", "the audacity", "no because seriously", "wild", "pain" naturally
 - Be a little dramatic about the numbers — because they ARE dramatic
-- Use sarcasm when talking about bad decisions (like ignoring tail risk for \
-17 years lol), but always follow up with the real explanation
-- Keep it educational — the sass is the vehicle, the knowledge is the cargo
+- Use dry humor and sarcasm when talking about bad decisions (like ignoring \
+tail risk for 17 years lol), but always follow up with the real explanation
+- Keep it educational — the wit is the vehicle, the knowledge is the cargo
 - If something is genuinely wild (VIX >60, $4T unwind), react like a human \
 would: "excuse me WHAT"
-- If a question is outside the case, say so — but make it funny: "bestie \
-that's a great question but it's not in my case notes, I'm not gonna \
-make stuff up for you"
+- If a question is outside the case, say so casually: "solid question but \
+that's not in my case notes — I don't make stuff up, that's not my style"
 
 RULES:
 - Answer using ONLY the case material below. Be precise with data points.
@@ -501,7 +500,7 @@ def main():
         unsafe_allow_html=True,
     )
     st.markdown(
-        '<div class="hero-caption">your slightly unhinged but very accurate finance bestie</div>',
+        '<div class="hero-caption">the carry trade crashed so you don\'t have to — AI-powered case study Q&A</div>',
         unsafe_allow_html=True,
     )
 
@@ -567,7 +566,7 @@ def main():
     api_key = st.secrets.get("OPENAI_API_KEY", None)
     if not api_key:
         st.warning(
-            "⚠️ Bestie, I can't talk without an API key. Pop your OpenAI key "
+            "⚠️ Can't do much without an API key. Pop your OpenAI key "
             "into **Manage app → Settings → Secrets** like this:\n\n"
             '`OPENAI_API_KEY = "sk-your-key-here"`\n\n'
         )
@@ -583,14 +582,12 @@ def main():
     if not st.session_state.get("welcomed"):
         st.session_state.welcomed = True
         welcome = (
-            "👋 Hey bestie! I'm your **Japan Carry Trade expert** — think of me "
-            "as that friend who actually reads the case *and* has opinions about "
-            "it.\n\n"
-            "Ask me anything about the 2024 yen carry trade unwind, the absolute "
-            "chaos of Black Monday, how contagion spreads faster than gossip, or "
-            "why transfer entropy is lowkey the most underrated tool in finance.\n\n"
-            "💡 *Not sure where to start? The sidebar has some bangers. Go on, "
-            "click one. I won't judge.*"
+            "👋 Hey — I'm your **Japan Carry Trade Q&A**. I know the case, "
+            "I've got opinions, and I don't make things up.\n\n"
+            "Ask me about the 2024 yen carry trade unwind, Black Monday, "
+            "contagion mechanics, transfer entropy, DRIVER — all of it.\n\n"
+            "💡 *Not sure where to start? The sidebar has some good ones. "
+            "Pick one, I'll do the rest.*"
         )
         st.session_state.messages.append(
             {"role": "assistant", "content": welcome}
